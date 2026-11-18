@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test-Wochenplan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Ruhige, lesefreundliche Arbeitsfläche: eine Aufgabe in der Mitte, Fortschritt oben, Aktion unten. Source Sans 3: schmal und gut lesbar. */
+:root{
+  --bg:#EEF2EF;
+  --surface:#FFFFFF;
+  --ink:#1D2B2A;
+  --muted:#5A6B69;
+  --accent:#2C7A6B;
+  --go:#E07A2F;
+  --soft:#DDE8E3;
+  --help:#F6D55C;
+  --font:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:19px;line-height:1.5}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:0;border-radius:14px;padding:14px 22px;background:var(--soft);color:var(--ink);font-weight:500}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--go);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.btn-go{background:var(--go);color:#fff;font-weight:700;font-size:24px;padding:18px 34px;box-shadow:0 4px 0 #b35d1f}
+.btn-go:active{transform:translateY(2px);box-shadow:0 2px 0 #b35d1f}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-ghost{background:transparent;color:var(--muted);text-decoration:underline;padding:8px 10px;font-size:16px}
+.app{max-width:820px;margin:0 auto;padding:16px;min-height:100%;display:flex;flex-direction:column;gap:16px}
+.top{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;background:var(--surface);border-radius:16px;padding:12px 16px}
+.top .lbl{font-size:13px;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
+.bar{height:12px;background:var(--soft);border-radius:8px;overflow:hidden;margin-top:4px}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:8px;transition:width .6s}
+.bar.xp>i{background:var(--go)}
+.screen{display:none;flex-direction:column;gap:18px;flex:1}
+.screen.on{display:flex}
+.card{background:var(--surface);border-radius:20px;padding:26px}
+h1,h2{text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:34px}
+h2{font-size:26px}
+.muted{color:var(--muted)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.chip{display:inline-block;font-size:14px;font-weight:700;padding:4px 12px;border-radius:999px;background:var(--soft);color:var(--accent)}
+.energy{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.energy button{display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 10px;background:var(--surface);border:3px solid var(--soft)}
+.energy button:hover{border-color:var(--accent)}
+.batt{width:56px;height:26px;border:3px solid var(--ink);border-radius:5px;position:relative;display:flex;gap:3px;padding:2px}
+.batt:after{content:"";position:absolute;right:-8px;top:6px;width:5px;height:9px;background:var(--ink);border-radius:0 2px 2px 0}
+.batt i{flex:1;background:var(--soft);border-radius:2px}
+.batt i.f{background:var(--accent)}
+.missions{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mission{background:var(--surface);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:12px;border:3px solid transparent}
+.mission.fav{border-color:var(--go)}
+.mission h2{font-size:23px}
+.mission .row{margin-top:auto}
+.step-dots{display:flex;gap:8px}
+.step-dots i{width:16px;height:16px;border-radius:50%;background:var(--soft)}
+.step-dots i.d{background:var(--accent)}
+.step-dots i.c{background:var(--go)}
+.step-img{width:100%;max-height:380px;object-fit:cover;border-radius:16px;display:block}
+.cover{width:calc(100% + 44px);margin:-22px -22px 0;height:150px;object-fit:cover;border-radius:17px 17px 0 0;display:block}
+.mission{overflow:hidden}
+.subj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.subj{display:flex;flex-direction:column;align-items:flex-start;gap:6px;background:var(--surface);border-left:10px solid var(--c,var(--accent));padding:20px 22px;text-align:left;font-size:24px;font-weight:700}
+.subj small{font-size:16px;font-weight:400;color:var(--muted)}
+.subj:hover:not(:disabled){box-shadow:0 0 0 3px var(--c,var(--accent))}
+.note{background:#FCE9D6;border-radius:12px;padding:10px 14px;font-size:16px}
+.opts button.sel{border-color:var(--go);background:#FCE9D6}
+.opts.pairs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pairs .col{display:flex;flex-direction:column;gap:10px}
+.opts.mem{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.opts.mem button{min-height:92px;text-align:center;font-weight:600;font-size:19px;padding:10px;display:flex;align-items:center;justify-content:center}
+.opts.mem button.hid{background:var(--accent);border-color:var(--accent);color:transparent}
+.item-big{background:var(--soft);border-radius:16px;padding:22px;text-align:center;font-size:32px;font-weight:700}
+.baskets{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opts .basket{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-weight:700;font-size:22px;padding:18px 12px;border-width:4px;border-style:dashed}
+.basket .got{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;font-size:15px;font-weight:400}
+.basket .got span{background:var(--soft);border-radius:999px;padding:2px 10px}
+.code-row{display:flex;gap:10px;flex-wrap:wrap}
+.opts .code-row button.btn-accent{background:var(--accent);border-color:var(--accent);color:#fff;text-align:center;font-weight:700}
+.code-row input{font-size:26px;letter-spacing:.12em;text-transform:uppercase;max-width:260px;padding:12px 14px}
+@media (max-width:620px){.opts.mem{grid-template-columns:repeat(3,1fr)}.opts.pairs{gap:8px}}
+.ref-card{max-height:90vh;overflow:auto}
+.ref-body{font-size:19px;line-height:1.5}
+.ref-body p{margin:0 0 10px}
+.ref-body table{width:100%;border-collapse:collapse;margin:6px 0 12px;font-size:18px}
+.ref-body th,.ref-body td{border-bottom:1px solid var(--soft);padding:6px 8px;text-align:left;vertical-align:top}
+.ref-body th{color:var(--accent);white-space:nowrap}
+.lv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.opts .lv{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:18px 12px;border-width:4px}
+.lv .medal{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;color:#fff}
+.lv b{font-size:22px}
+.lv span.d{font-size:16px;color:var(--muted)}
+.lvchip{font-size:14px;font-weight:700;padding:3px 10px;border-radius:999px;color:#fff}
+@media (max-width:620px){.lv-grid{grid-template-columns:1fr}}
+.who-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.who{display:flex;flex-direction:column;align-items:center;gap:12px;background:var(--surface);padding:26px 14px;font-size:24px;font-weight:700;border:3px solid transparent}
+.who:hover{border-color:var(--c)}
+.avatar{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:38px;font-weight:700;background:var(--c)}
+.prof{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;background:var(--bg);border-left:8px solid var(--c);border-radius:12px;padding:12px 14px}
+.prof input[data-k="name"]{width:140px}
+.prof input[type=number]{width:64px}
+.prof .pstat{font-size:15px;color:var(--muted);padding-bottom:10px}
+.avatar.sm{width:44px;height:44px;font-size:20px;align-self:center}
+.kind{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--go)}
+.info-text{font-size:24px;line-height:1.45;margin:4px 0;background:var(--soft);border-radius:16px;padding:18px 20px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opts button{text-align:left;background:var(--surface);border:3px solid var(--soft);font-size:21px;padding:14px 18px}
+.opts button:hover:not(:disabled){border-color:var(--accent)}
+.opts button.ok{border-color:var(--accent);background:#D7EEE7}
+.opts button.no{opacity:.45;text-decoration:line-through}
+.fb{min-height:28px;margin:0;font-weight:500}
+.step-text{font-size:28px;font-weight:500;line-height:1.35;margin:6px 0 4px}
+.timer{display:flex;flex-direction:column;gap:6px}
+.timer .bar{height:20px}
+.timer .bar>i{background:var(--accent);transition:width 1s linear}
+.actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+.speak{display:inline-flex;align-items:center;gap:8px}
+.speak svg{width:22px;height:22px}
+.big-count{font-size:64px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent);line-height:1}
+.move-text{font-size:30px;font-weight:500;line-height:1.3}
+.faces{display:flex;gap:12px}
+.faces button{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--surface);border:3px solid var(--soft)}
+.faces button.sel{border-color:var(--go)}
+.faces svg{width:48px;height:48px}
+.pick-list{display:flex;flex-direction:column;gap:8px}
+.pick-list button{text-align:left;background:var(--surface);border:3px solid var(--soft)}
+.pick-list button.sel{border-color:var(--go)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:var(--soft);border-radius:16px;padding:14px;text-align:center}
+.stat b{display:block;font-size:36px;font-variant-numeric:tabular-nums;color:var(--accent)}
+.overlay{position:fixed;inset:0;background:rgba(29,43,42,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.overlay.on{display:flex}
+.overlay .card{max-width:560px;width:100%;display:flex;flex-direction:column;gap:16px}
+.handcard{background:var(--help);border-radius:20px;padding:26px;text-align:center;font-size:30px;font-weight:700}
+.toast{position:fixed;left:50%;top:90px;transform:translateX(-50%);background:var(--go);color:#fff;font-weight:700;padding:10px 22px;border-radius:999px;font-size:22px;opacity:0;pointer-events:none;transition:opacity .3s, top .3s;z-index:20}
+.toast.on{opacity:1;top:76px}
+.foot{display:flex;justify-content:space-between;align-items:center}
+/* Lehrperson */
+.t-task{background:var(--surface);border-radius:16px;padding:16px;display:grid;gap:10px}
+.t-task.done{opacity:.7}
+label{font-size:14px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+input,textarea,select{font-family:inherit;font-size:16px;padding:10px;border:2px solid var(--soft);border-radius:10px;background:#fff;color:var(--ink)}
+textarea{min-height:90px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 2fr 110px;gap:10px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--soft)}
+td{font-variant-numeric:tabular-nums}
+.tscroll{overflow-x:auto}
+@media (max-width:620px){
+  .top{grid-template-columns:1fr}
+  .missions{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .step-text{font-size:24px}
+  h1{font-size:28px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="top" id="topbar">
+    <div><div class="lbl"><span>Level <b id="lvl">1</b></span><span id="xpTxt">0 Punkte</span></div><div class="bar xp"><i id="xpBar" style="width:0%"></i></div></div>
+    <div><div class="lbl"><span>Lektion</span><span id="lessonTxt">45 Min.</span></div><div class="bar"><i id="lessonBar" style="width:0%"></i></div></div>
+    <div><div class="lbl"><span>Missionen geschafft</span><span id="weekTxt">0 von 0</span></div><div class="bar"><i id="weekBar" style="width:0%"></i></div></div>
+  </div>
+
+  <!-- WER BIST DU -->
+  <section class="screen" id="s-who">
+    <h1>Wer bist du?</h1>
+    <div class="who-grid" id="whoGrid"></div>
+  </section>
+
+  <!-- START -->
+  <section class="screen" id="s-start">
+    <div class="card" style="display:flex;flex-direction:column;gap:14px">
+      <span class="chip" style="align-self:flex-start">Test-Wochenplan</span>
+      <h1 id="hello">Hallo! Schön, dass du da bist.</h1>
+      <p class="muted" id="helloSub" style="margin:0">Du bekommst 10 Punkte, nur weil du heute hier bist.</p>
+      <div id="resumeBox" style="display:none" class="row">
+        <button class="btn-go" id="resumeBtn">Weitermachen</button>
+        <span class="muted">Deine Lektion läuft noch.</span>
+      </div>
+      <div><button class="btn-ghost" id="switchBtn">Nicht du? Anderes Profil wählen</button></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:16px">
+      <h2>Wie viel Energie hast du gerade?</h2>
+      <div class="energy">
+        <button data-e="1"><span class="batt"><i class="f"></i><i></i><i></i></span><span>Wenig</span><span class="muted" style="font-size:14px">6-Min.-Blöcke</span></button>
+        <button data-e="2"><span class="batt"><i class="f"></i><i class="f"></i><i></i></span><span>Mittel</span><span class="muted" style="font-size:14px">8-Min.-Blöcke</span></button>
+        <button data-e="3"><span class="batt"><i class="f"></i><i class="f"></i><i class="f"></i></span><span>Viel</span><span class="muted" style="font-size:14px">10-Min.-Blöcke</span></button>
+      </div>
+      <p class="muted" style="margin:0;font-size:16px">Nach jedem Block kommt eine Bewegungspause.</p>
+    </div>
+  </section>
+
+  <!-- FACH WÄHLEN -->
+  <section class="screen" id="s-subject">
+    <h1>Welches Fach machst du jetzt?</h1>
+    <div class="subj-grid" id="subjGrid"></div>
+  </section>
+
+  <!-- MISSION WÄHLEN -->
+  <section class="screen" id="s-pick">
+    <div class="row" style="justify-content:space-between"><h1>Wähle deine Mission</h1><span class="chip" id="pickSubj"></span></div>
+    <div class="missions" id="missions"></div>
+    <div class="row"><button id="otherBtn">Zwei andere zeigen</button><button id="subjBtn">Anderes Fach</button></div>
+  </section>
+
+  <!-- ARBEITEN -->
+  <section class="screen" id="s-work">
+    <div class="card" style="display:flex;flex-direction:column;gap:14px">
+      <div class="row" style="justify-content:space-between">
+        <span class="chip" id="wSubject">Fach</span>
+        <span class="row" style="gap:8px"><span class="lvchip" id="wLevel" style="display:none"></span><span class="muted" id="wStepLbl" style="font-size:16px">Schritt 1 von 3</span></span>
+      </div>
+      <h2 id="wTitle">Titel</h2>
+      <div class="step-dots" id="wDots"></div>
+      <img class="step-img" id="wImg" alt="" style="display:none">
+      <span class="kind" id="wKind">Auftrag</span>
+      <p class="step-text" id="wStep">Schritt</p>
+      <div class="opts" id="wOpts"></div>
+      <p class="fb" id="wFb"></p>
+      <div class="actions">
+        <button class="speak" id="speakBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>Vorlesen</button>
+        <button class="btn-go" id="doneStepBtn">Geschafft ✓</button>
+      </div>
+    </div>
+    <div class="card timer">
+      <div class="lbl row" style="justify-content:space-between"><span id="blockTxt">Noch 8 Min. bis zur Bewegungspause</span><span class="muted" id="goalTxt" style="font-size:16px"></span></div>
+      <div class="bar"><i id="blockBar" style="width:100%"></i></div>
+    </div>
+    <div class="foot">
+      <div class="row">
+        <button id="helpBtn">Ich brauche Hilfe</button>
+        <button id="refBtn" class="btn-accent" style="display:none">Merkblatt anschauen</button>
+        <button id="earlyBreakBtn">Ich muss mich jetzt bewegen</button>
+      </div>
+      <button class="btn-ghost" id="endEarlyBtn">Lektion beenden</button>
+    </div>
+  </section>
+
+  <!-- PAUSE -->
+  <section class="screen" id="s-break">
+    <div class="card" style="display:flex;flex-direction:column;gap:18px;align-items:flex-start">
+      <span class="chip">Bewegungspause</span>
+      <p class="move-text" id="moveText">Steh auf und streck dich.</p>
+      <div class="big-count" id="breakCount">2:00</div>
+      <p class="muted" style="margin:0" id="placeHint">Willst du danach den Platz wechseln? Stehpult, Sitzball oder ein anderer Ort: Sprich es kurz mit deiner Lehrperson ab.</p>
+      <div class="row">
+        <button class="btn-go" id="backBtn" disabled>Bereit für den nächsten Block</button>
+        <button id="otherMoveBtn">Andere Übung</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABSCHLUSS -->
+  <section class="screen" id="s-end">
+    <h1>Das hast du heute geschafft</h1>
+    <div class="stats">
+      <div class="stat"><b id="eSteps">0</b>Schritte</div>
+      <div class="stat"><b id="eTasks">0</b>Aufträge fertig</div>
+      <div class="stat"><b id="eXp">0</b>Punkte</div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:14px">
+      <h2>Wie lief es?</h2>
+      <div class="faces" id="faces">
+        <button data-r="1"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="24" r="20"/><circle cx="17" cy="20" r="1.5" fill="currentColor"/><circle cx="31" cy="20" r="1.5" fill="currentColor"/><path d="M16 33c4-4 12-4 16 0"/></svg>Schwierig</button>
+        <button data-r="2"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="24" r="20"/><circle cx="17" cy="20" r="1.5" fill="currentColor"/><circle cx="31" cy="20" r="1.5" fill="currentColor"/><path d="M16 31h16"/></svg>Okay</button>
+        <button data-r="3"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="24" cy="24" r="20"/><circle cx="17" cy="20" r="1.5" fill="currentColor"/><circle cx="31" cy="20" r="1.5" fill="currentColor"/><path d="M15 29c4 5 14 5 18 0"/></svg>Gut</button>
+      </div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:14px" id="nextBox">
+      <h2>Womit startest du nächstes Mal?</h2>
+      <div class="pick-list" id="nextList"></div>
+    </div>
+    <div class="row"><button class="btn-go" id="finishBtn">Fertig</button></div>
+  </section>
+
+  <!-- TSCHÜSS -->
+  <section class="screen" id="s-bye">
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <h1 id="byeTitle">Super gemacht!</h1>
+      <p style="margin:0" id="byeText">Bis zum nächsten Mal.</p>
+      <div><button id="newLessonBtn">Zur Profilwahl</button></div>
+    </div>
+  </section>
+
+  <!-- PIN -->
+  <section class="screen" id="s-pin">
+    <div class="card" style="display:flex;flex-direction:column;gap:14px;max-width:420px">
+      <h2>Bereich für die Lehrperson</h2>
+      <label for="pinIn">PIN eingeben</label>
+      <input id="pinIn" type="password" inputmode="numeric" autocomplete="off">
+      <p class="muted" id="pinErr" style="margin:0;font-size:15px"></p>
+      <div class="row"><button class="btn-accent" id="pinOk">Öffnen</button><button id="pinCancel">Zurück</button></div>
+    </div>
+  </section>
+
+  <!-- LEHRPERSON -->
+  <section class="screen" id="s-teacher">
+    <div class="row" style="justify-content:space-between">
+      <h1>Lehrperson</h1>
+      <button class="btn-accent" id="tClose">Speichern und schliessen</button>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <h2>Schülerprofile</h2>
+      <p class="muted" style="margin:0;font-size:16px">Jedes Profil hat eigene Punkte, einen eigenen Verlauf und einen eigenen Wochenplan. Die Blocklänge gilt für «wenig / mittel / viel Energie». Die Schüler sehen nur den Namen, nicht den Blocktyp.</p>
+      <div id="tProf" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="row"><button id="tAddProf">Neues Profil</button></div>
+    </div>
+    <h2 id="tEditTitle">Wochenplan</h2>
+    <div class="card grid2" style="grid-template-columns:1fr 1fr">
+      <label for="tPin">PIN für diesen Bereich<input id="tPin" type="text" inputmode="numeric"></label>
+      <label for="tFix">Fach für die nächste Lektion (nur dieses Profil)<select id="tFix"></select></label>
+    </div>
+    <p class="muted" style="margin:0;font-size:16px">Das Fach schreibst du genau gleich wie bei den anderen Aufträgen, sonst entsteht ein neues Fach. Pro Auftrag: Schritte je auf eine eigene Zeile. Kurz und mit Verb vorne, z.&nbsp;B. «Löse Aufgabe 1 bis 3.» Der Tipp erscheint, wenn er auf «Ich brauche Hilfe» drückt.<br>Spezielle Zeilen: <b>Info: Text</b> zeigt einen kurzen Lesetext mit Vorlesen. <b>Quiz: Frage | *richtige Antwort | falsche Antwort | falsche Antwort</b> zeigt eine Quizfrage, der Stern markiert die richtige Antwort.<br>
+      <b>Paare: Anleitung | links=rechts | links=rechts</b> zum Zuordnen. <b>Memory: Anleitung | Karte=Karte | …</b> für Memory (4–8 Paare). <b>Körbe: Frage | Korb 1: Wort, Wort | Korb 2: Wort, Wort</b> zum Sortieren. <b>Posten: Was er tun soll | CODEWORT</b> für einen Posten im Raum. Die Anleitung ist jeweils freiwillig.<br>
+      <b>Level: Frage | Bronze: … | Silber: … | Gold: …</b> lässt ihn sein Level wählen. Zeilen, die mit <b>[B]</b>, <b>[S]</b> oder <b>[G]</b> beginnen, sieht er nur im passenden Level. Kombinationen sind möglich, z.&nbsp;B. <b>[SG]</b>. Silber gibt am Ende 10 Bonuspunkte, Gold 20.</p>
+    <div id="tTasks" style="display:flex;flex-direction:column;gap:12px"></div>
+    <div class="row">
+      <button class="btn-accent" id="tAdd">Neuer Auftrag</button>
+      <button id="tReset">Neue Woche: alle Aufträge wieder offen</button>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <h2>Vorlesen</h2>
+      <div class="grid2" style="grid-template-columns:1fr 1fr">
+        <label for="tVoice">Deutsche Stimme<select id="tVoice"></select></label>
+        <label for="tVoiceEn">Englische Stimme<select id="tVoiceEn"></select></label>
+        <label for="tRate">Tempo: <span id="tRateTxt"></span><input id="tRate" type="range" min="0.6" max="1.2" step="0.05"></label>
+        <div class="row" style="align-items:flex-end"><button id="tTry">Probehören</button><button id="tTryEn">Englisch probehören</button></div>
+      </div>
+      <p class="muted" style="margin:0;font-size:15px">Die Liste zeigt die Stimmen, die auf diesem Gerät installiert sind. Auf einem anderen Gerät musst du die Stimme dort nochmals wählen.</p>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <h2>Fächer</h2>
+      <p class="muted" style="margin:0;font-size:16px">Wochenziel in Minuten (0 = kein Ziel). Die Zeit zählt nur, während er auf dem Arbeitsbildschirm ist. «Der Reihe nach» zeigt ihm immer nur die nächste offene Mission dieses Fachs.</p>
+      <div class="tscroll"><table><thead><tr><th>Fach</th><th>Wochenziel (Min.)</th><th>Der Reihe nach</th><th>Diese Woche</th></tr></thead><tbody id="tSubj"></tbody></table></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <h2>Verlauf</h2>
+      <div class="tscroll"><table><thead><tr><th>Datum</th><th>Fach</th><th>Energie</th><th>Schritte</th><th>Aufträge</th><th>Bewertung</th></tr></thead><tbody id="tLog"></tbody></table></div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <h2>Sichern und übertragen</h2>
+      <p class="note" id="tBackup" style="margin:0"></p>
+      <p class="muted" style="margin:0;font-size:16px">Alles wird nur in diesem Browser gespeichert. Der Code enthält alle Profile. Kopiere ihn einmal pro Woche und leg ihn ab, zum Beispiel in einer Notiz. Mit «Code einlesen» stellst du den Stand wieder her oder nimmst ihn auf ein anderes Gerät mit.</p>
+      <textarea id="tCode" aria-label="Datencode"></textarea>
+      <div class="row"><button id="tExport">Code kopieren</button><button id="tImport">Code einlesen</button><span class="muted" id="tMsg" style="font-size:15px"></span></div>
+    </div>
+  </section>
+
+  <div class="foot" id="footer">
+    <span class="muted" style="font-size:13px">Alles bleibt auf diesem Gerät.</span>
+    <button class="btn-ghost" id="teacherBtn">Lehrperson</button>
+  </div>
+</div>
+
+<!-- Hilfe-Overlay -->
+<div class="overlay" id="refOv">
+  <div class="card ref-card">
+    <h2 id="refTitle">Merkblatt</h2>
+    <div id="refBody" class="ref-body"></div>
+    <div class="row"><button class="speak" id="refSpeak">Vorlesen</button><button class="btn-go" id="refClose">Zurück zur Aufgabe</button></div>
+  </div>
+</div>
+<div class="overlay" id="helpOv">
+  <div class="card">
+    <h2>Tipp</h2>
+    <p style="margin:0;font-size:22px" id="helpTip"></p>
+    <button class="speak" id="speakTip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="22" height="22"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>Tipp vorlesen</button>
+    <div class="handcard" id="handCard" style="display:none">Ich brauche Hilfe ✋</div>
+    <div class="row">
+      <button id="showHand">Lehrperson rufen</button>
+      <button class="btn-go" id="closeHelp">Weiter arbeiten</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">+5</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="test-wochenplan-v2";
+var IMG={};
+var REFS={
+ pvs:{btn:"Merkkarte anschauen",title:"Merkkarte: Punkt vor Strich",html:'<p><b>Regel 1:</b> Punkt-Rechnungen (<b>·</b> und <b>:</b>) rechnest du <b>vor</b> Strich-Rechnungen (<b>+</b> und <b>−</b>).</p><p><b>Regel 2:</b> Stehen nur Punkt- oder nur Strich-Rechnungen da, rechnest du <b>von links nach rechts</b>.</p><p><b>Tipp:</b> Kreis die Punkt-Rechnungen als «Päckli» ein.</p><table><tr><td>30 + 12 : 4</td><td>= 30 + 3</td><td>= 33</td></tr><tr><td>18 : 3 + 4 · 2</td><td>= 6 + 8</td><td>= 14</td></tr><tr><td>12 : 2 · 3</td><td>= 6 · 3</td><td>= 18</td></tr></table>',
+  say:"Regel 1: Mal und geteilt rechnest du vor plus und minus. Regel 2: Stehen nur Mal und geteilt oder nur plus und minus da, rechnest du von links nach rechts. Tipp: Kreis die Punkt-Rechnungen als Päckli ein."},
+ praet:{btn:"Merkblatt anschauen",title:"Merkblatt: Präteritum",html:'<p>Das <b>Präteritum</b> ist die Erzählzeit. Damit erzählt man, was früher passiert ist.</p><table><tr><th></th><th>Präsens</th><th>Präteritum</th></tr><tr><td>regelmässig</td><td>ich lerne</td><td>ich lern<b>te</b></td></tr><tr><td>unregelmässig</td><td>ich fahre</td><td>ich f<b>u</b>hr</td></tr></table><p><b>Regelmässig:</b> Stamm + te (hören → hörte, stellen → stellte)<br><b>Unregelmässig:</b> Der Stamm ändert sich (helfen → half).</p><p><b>Trennbare Verben</b> (aufstehen, vorbeikommen):<br>Hauptsatz: «Ich <b>stand</b> früh <b>auf</b>.»<br>Nach wenn/als: «… als ich <b>aufstand</b>.»</p><p><b>Verbenliste</b></p><table><tr><td>sein – war</td><td>haben – hatte</td></tr><tr><td>kommen – kam</td><td>gehen – ging</td></tr><tr><td>stehen – stand</td><td>nehmen – nahm</td></tr><tr><td>helfen – half</td><td>rufen – rief</td></tr><tr><td>lesen – las</td><td>ziehen – zog</td></tr><tr><td>wissen – wusste</td><td>müssen – musste</td></tr><tr><td>steigen – stieg</td><td>schliessen – schloss</td></tr><tr><td>sehen – sah</td><td>schreiben – schrieb</td></tr></table>',
+  say:"Das Präteritum ist die Erzählzeit. Regelmässige Verben: Stamm plus te, zum Beispiel hören, hörte. Unregelmässige Verben: Der Stamm ändert sich, zum Beispiel helfen, half. Trennbare Verben: Im Hauptsatz: Ich stand früh auf. Nach wenn oder als: als ich aufstand."},
+ andalusien:{btn:"Steckbrief anschauen",title:"Steckbrief Andalusien",html:'<table><tr><th>Lage</th><td>ganz im Süden von Spanien, am Mittelmeer und am Atlantik</td></tr><tr><th>Städte</th><td>Sevilla, Málaga, Almería</td></tr><tr><th>Klima</th><td>subtropisch: Sommer heiss und trocken, oft über 40 °C · Winter mild · Regen vor allem im Winter</td></tr><tr><th>Sonne</th><td>mehr Sonnenstunden als jede andere Region Spaniens</td></tr><tr><th>Energie</th><td>immer mehr Strom aus Sonnenenergie · ein Teil wird in die Schweiz verkauft</td></tr><tr><th>Landwirtschaft</th><td>um Almería: Obst und Gemüse unter Plastikfolien · etwa 3 Mio. Tonnen pro Jahr · Fläche etwa 4-mal so gross wie die Stadt Zürich · 70 % werden exportiert</td></tr><tr><th>Problem Wasser</th><td>zu wenig Wasser · Felder werden künstlich bewässert</td></tr><tr><th>Erntearbeiter</th><td>oft aus Afrika · ohne Vertrag · bis 15 Stunden am Tag · sehr wenig Lohn</td></tr><tr><th>Boden</th><td>Wälder abgeholzt · Böden trocken und salzig · Südspanien wird zur Wüste (Desertifikation)</td></tr><tr><th>Tourismus</th><td>Costa del Sol und Costa de la Luz</td></tr></table>',
+  say:"Andalusien liegt ganz im Süden von Spanien. Das Klima ist subtropisch: Die Sommer sind heiss und trocken, oft über 40 Grad. Andalusien hat sehr viel Sonne und macht immer mehr Strom aus Sonnenenergie. Ein Teil wird in die Schweiz verkauft. Um Almería wächst Obst und Gemüse unter Plastikfolien. Es gibt zu wenig Wasser. Viele Erntearbeiter arbeiten bis 15 Stunden am Tag für wenig Lohn. Die Böden werden trocken und salzig, Südspanien wird zur Wüste."}
+};
+var IMG_CAP={solar:"Sonnenkraftwerk bei Sevilla",folien:"Gemüseanbau unter Folien bei Almería",ernte:"Erntearbeiter bei der Ernte",wueste:"Desertifikation in Südspanien",karte:"Karte zu Aufgabe 2 (Gebiet A und B)"};
+var LESSON_MIN=45, BREAK_MIN_SEC=60;
+function breakSec(){return ((S&&S.session&&S.session.brk)||2)*60;}
+var MOVES=[
+ "Steh auf und mach 10 langsame Kniebeugen.",
+ "Hol dir ein Glas Wasser und trink es aus.",
+ "Geh einmal leise durch den Gang und wieder zurück.",
+ "Drück 10-mal die Hände fest zusammen. Dann schüttle die Arme aus.",
+ "Mach 10 Liegestütze an der Wand.",
+ "Streck dich ganz gross. Dann berühr die Zehen. Das 5-mal.",
+ "Stell dich auf ein Bein und zähl bis 20. Dann das andere Bein.",
+ "Roll 10-mal die Schultern nach hinten und 10-mal nach vorne."
+];
+function uid(){return "t"+Math.random().toString(36).slice(2,9);}
+function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function defaults(){
+ return {goals:{"Deutsch":30},ordered:{},wk:{id:"",sec:{},hit:{}},name:"",pin:"1234",xp:0,lastAttend:"",nextStart:null,log:[],session:null,tasks:[
+  {id:uid(),subject:"Mathematik",title:"Punkt vor Strich",ref:"pvs",steps:["Info: Punkt-Rechnungen sind · und :. Strich-Rechnungen sind + und −. Punkt-Rechnungen sind stärker. Du rechnest sie immer zuerst.", "Info: Beispiel: 30 + 12 : 4. Zuerst das Päckli: 12 : 4 = 3. Dann: 30 + 3 = 33.", "Info: Noch ein Beispiel: 6 · 2 + 8. Zuerst das Päckli: 6 · 2 = 12. Dann: 12 + 8 = 20.", "Körbe: Ist das eine Punkt- oder eine Strichrechnung? | Punkt (· und :): 7 · 3, 20 : 4, 9 · 5, 36 : 6 | Strich (+ und −): 15 + 6, 30 − 9, 48 + 7, 50 − 25", "Quiz: Was rechnest du bei 5 + 3 · 4 zuerst? | *3 · 4 | 5 + 3", "Paare: Welches Ergebnis passt? Tipp zuerst links die Rechnung an. | 5 + 3 · 4=17 | 20 − 12 : 3=16 | 6 · 2 + 8=20 | 18 : 3 + 4 · 2=14 | 9 + 16 : 4=13", "Quiz: Fehlerdetektiv: Lena rechnet 4 + 6 · 2 = 20. Stimmt das? | *Nein, richtig ist 16. | Ja, das stimmt. | Nein, richtig ist 12.", "Level: Wie viel traust du dir heute zu? | Bronze: 6 Aufgaben auf dem Arbeitsblatt | Silber: 10 Aufgaben auf dem Arbeitsblatt | Gold: alle 12 Aufgaben und eine eigene Rechnung", "Hol das Arbeitsblatt 8.1 «Punkt vor Strich». Du darfst die Päckli mit Bleistift einkreisen und Zwischenergebnisse aufschreiben.", "[B] Rechne die Aufgaben 3, 10 und 11.", "[B] Rechne die Aufgaben 2, 5 und 9.", "[S] Rechne die Aufgaben 2, 3, 5, 9, 10 und 11.", "[S] Rechne die Aufgaben 4, 6, 7 und 12.", "[G] Rechne die Aufgaben 1 bis 6.", "[G] Rechne die Aufgaben 7 bis 12. Achtung bei Aufgabe 8: Bei 12 : 2 · 3 rechnest du von links nach rechts.", "[G] Erfinde eine eigene Punkt-vor-Strich-Rechnung. Lass sie einen Kollegen lösen.", "Geh zum Pult und kontrolliere mit dem Lösungsblatt. Rechne falsche Aufgaben nochmals.", "Posten: Geh zum Posten «Punkt vor Strich». Rechne die Aufgabe auf dem Zettel. Das Ergebnis ist dein Codewort. | 24"],tip:"Kreis zuerst alle · und : ein. Die rechnest du zuerst. Wenn nur noch · und : dastehen, rechnest du von links nach rechts.",done:false,pos:0},
+  {id:uid(),subject:"Deutsch",title:"Mein Grossvater erzählt",ref:"praet",steps:["Info: Der Grossvater erzählt von früher. Wer erzählt, braucht das Präteritum: ich hatte, er war, ich hörte.", "Info: Mit dem Knopf «Merkblatt anschauen» siehst du jederzeit die Regeln und eine Verbenliste.", "Körbe: Regelmässig oder unregelmässig? | regelmässig (mit -te): hören, verstecken, wundern, stellen | unregelmässig (Stamm ändert sich): helfen, rufen, lesen, ziehen", "Info: Trennbare Verben wie «aufstehen»: Im Hauptsatz gehen sie auseinander: «Ich stand früh auf.» Nach «wenn» oder «als» bleiben sie zusammen am Ende: «… als ich aufstand.»", "Quiz: Ich ___ früh ___. (aufstehen) | *stand … auf | stehte … auf | aufstand … auf", "Quiz: Ich war müde, als ich ___. (aufstehen) | *aufstand | stand auf | aufstehte", "Level: Wie viel traust du dir heute zu? | Bronze: Abschnitt 1 und 2 mit Wortspeicher | Silber: das ganze Blatt mit Merkblatt | Gold: das ganze Blatt ohne Hilfe und trennbare Verben markieren", "[B] Paare: Dein Wortspeicher: Finde die Präteritum-Formen. | helfen=half | rufen=rief | kommen=kam | müssen=musste | lesen=las", "Hol das Verben-Dossier. Schlag «Arbeitsblatt 6 · Mein Grossvater erzählt» auf.", "Abschnitt 1: Füll die Lücken von «Als kleiner Junge …» bis «… hinter dem Vorhang.» Das sind 7 Lücken.", "Abschnitt 2: Füll die Lücken bis «… dabei gewesen wäre.» Das sind 8 Lücken.", "Posten: Geh zum Lösungsposten. Kontrolliere Abschnitt 1 und 2 und verbessere deine Fehler. Unten auf dem Posten steht das Codewort. | SAMICHLAUS", "[SG] Abschnitt 3: Füll die Lücken bis «… sich über ihn.» Das sind 8 Lücken.", "[SG] Abschnitt 4: Füll die Lücken bis «… nicht mehr alles.» Das sind 8 Lücken.", "[G] Markiere alle trennbaren Verben im Text mit Farbe.", "[SG] Geh zum Pult und kontrolliere Abschnitt 3 und 4 mit dem Lösungsblatt.", "Lies deinen lustigsten Abschnitt einem Kollegen vor."],tip:"Regelmässig: Stamm + te (hörte). Unregelmässig: neuer Stamm (half). Öffne das Merkblatt und schau in der Verbenliste nach.",done:false,pos:0},
+  {id:uid(),subject:"Geografie",title:"Andalusien",ref:"andalusien",steps:["Info: Heute löst du die 3 Aufgaben zu Andalusien in deinem Europa-Dossier. Die Website hilft dir dabei. Den «Steckbrief Andalusien» kannst du jederzeit öffnen.", "Level: Wie viel traust du dir heute zu? | Bronze: kurze Antworten mit Satzanfang und Kartenhilfe | Silber: längere Antworten mit Satzanfang | Gold: ohne Hilfe und mit mehr Gründen", "Info: Aufgabe 3. Andalusien ist die sonnigste Region Spaniens. Dort steht ein grosses Sonnenkraftwerk. Schweizer Stromfirmen haben über 70 % davon bezahlt. Ein Teil des Stroms kommt in die Schweiz.", "Schau im Dossier das grosse Foto oben beim Kapitel Andalusien an. Das ist ein Sonnenkraftwerk.", "Körbe: Ist das ein guter Grund für die Schweiz? | guter Grund: In Spanien scheint die Sonne viel öfter., Sonnenstrom schont das Klima., In der Schweiz gibt es weniger Sonne. | kein guter Grund: In Spanien ist es kalt., Spanien hat im Sommer keine Sonne.", "[B] Schreib Aufgabe 3 ins Dossier. Ein Satz. Start so: «Die Schweiz will Sonnenstrom aus Spanien, weil …»", "[S] Schreib Aufgabe 3 ins Dossier. Zwei Sätze. Start so: «Die Schweiz will Sonnenstrom aus Spanien, weil …» und «Ausserdem …»", "[G] Schreib Aufgabe 3 ins Dossier. Nenne 3 Gründe.", "Info: Aufgabe 1. Rund um Almería wächst Gemüse unter Plastik. Es gibt zu wenig Wasser. Viele Erntearbeiter arbeiten bis 15 Stunden am Tag für wenig Lohn. Die Böden werden trocken und salzig.", "Schau im Dossier die Fotos «Gemüseanbau unter den Folien» und «Erntearbeiter bei der Ernte» an.", "Körbe: Ist das ein guter Grund gegen billige Tomaten? | guter Grund: Es gibt zu wenig Wasser., Die Arbeiter werden schlecht bezahlt., Es braucht viel Plastik., Der Transport ist lang. | kein guter Grund: Tomaten sind rot., Tomaten sind gesund.", "[B] Schreib Aufgabe 1 ins Dossier. Nenne 2 Gründe. Start so: «Ich kaufe die Tomaten besser nicht, weil …»", "[S] Schreib Aufgabe 1 ins Dossier. Nenne 3 Gründe.", "[G] Schreib Aufgabe 1 ins Dossier. Nenne 3 Gründe und eine Idee, was du stattdessen kaufen könntest.", "Steh auf und erklär einem Kollegen deinen wichtigsten Grund.", "Posten: Aufgabe 2. Geh zur Atlas-Station und hol den Schweizer Weltatlas. Dort liegt auch das Codewort. | ATLAS", "Schlag im Atlas Seite 94 auf. Schau im Dossier die Karte bei Aufgabe 2 an.", "[BS] Info: Tipp: Die Farben im Atlas zeigen die Vegetation. Schau in der Legende, was die Farbe bedeutet.", "[B] Info: Kartenhilfe: Auf der Dossier-Karte ist Gebiet A oben und Gebiet B unten.", "Such Gebiet A im Atlas. Schreib die Vegetation ins Dossier.", "Such Gebiet B im Atlas. Schreib die Vegetation ins Dossier.", "Zeig deine 3 Aufgaben deiner Lehrperson.", "[G] Zusatz: Zeichne auf ein Blatt, wie Andalusien in 30 Jahren aussehen könnte. Zeichne mindestens 3 Ideen."],tip:"Öffne den «Steckbrief Andalusien». Dort stehen die wichtigsten Infos ganz kurz.",done:false,pos:0}
+ ]};
+}
+var ST,S=null,P=null;
+var TYPES={kurz:{label:"Kurze Blöcke (z. B. ADHS)",blocks:[6,8,10],brk:2},mittel:{label:"Mittlere Blöcke",blocks:[10,12,15],brk:2},lang:{label:"Lange Blöcke (ohne ADHS)",blocks:[15,20,25],brk:3}};
+var COLORS=["#2F6FB3","#C2453A","#4F8F2F","#7A4FB0","#B5762A","#3A8C9C","#9C3A7A","#5C6B2F"];
+function newProfile(name,type,color){var t=TYPES[type]||TYPES.kurz;return {id:uid(),name:name,color:color,type:type,blocks:t.blocks.slice(),brk:t.brk,state:defaults()};}
+function defaultStore(){return {pin:"1234",rate:0.95,voice:"",voiceEn:"",lastExport:0,profiles:[newProfile("A","kurz",COLORS[0]),newProfile("B","mittel",COLORS[1]),newProfile("C","lang",COLORS[2])]};}
+function load(){try{var r=localStorage.getItem(KEY);ST=r?JSON.parse(r):defaultStore();}catch(e){ST=defaultStore();}
+ if(!ST||!ST.profiles||!ST.profiles.length)ST=defaultStore();
+ var RN={Falke:"A",Fuchs:"B",Wolf:"C"};ST.profiles.forEach(function(p){if(RN[p.name])p.name=RN[p.name];});}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(ST));}catch(e){}}
+function profById(id){return ST.profiles.find(function(p){return p.id===id;});}
+function useProfile(id){P=profById(id)||ST.profiles[0];S=P.state;}
+load();
+
+var $=function(id){return document.getElementById(id);};
+var cur="s-start";
+function show(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.toggle("on",s.id===id);});cur=id;
+ var hideTop=(id==="s-teacher"||id==="s-pin"||id==="s-who");$("topbar").style.display=hideTop?"none":"";$("footer").style.display=hideTop?"none":"";
+ window.scrollTo(0,0);}
+
+/* ---------- Anzeige oben ---------- */
+function renderTop(){if(!S)return;
+ var lvl=Math.floor(S.xp/100)+1;$("lvl").textContent=lvl;$("xpTxt").textContent=S.xp+" Punkte";$("xpBar").style.width=(S.xp%100)+"%";
+ var tot=S.tasks.length,dn=S.tasks.filter(function(t){return t.done;}).length;
+ $("weekTxt").textContent=dn+" von "+tot;$("weekBar").style.width=(tot?dn/tot*100:0)+"%";
+ var ss=S.session;
+ if(ss){var el=(Date.now()-ss.lessonStart)/60000;var left=Math.max(0,Math.ceil(LESSON_MIN-el));$("lessonTxt").textContent="noch "+left+" Min.";$("lessonBar").style.width=Math.min(100,el/LESSON_MIN*100)+"%";}
+ else{$("lessonTxt").textContent=LESSON_MIN+" Min.";$("lessonBar").style.width="0%";}
+}
+var toastT;
+function addXp(n,msg){S.xp+=n;if(S.session)S.session.xp+=n;save();renderTop();
+ var t=$("toast");t.textContent="+"+n+(msg?"  "+msg:"");t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("on");},1800);}
+
+/* ---------- Vorlesen ---------- */
+function voicesFor(prefix){try{return speechSynthesis.getVoices().filter(function(x){return x.lang.toLowerCase().indexOf(prefix)===0;});}catch(e){return [];}}
+function speak(text,lang){try{var s=window.speechSynthesis;if(!s)return;s.cancel();lang=lang||"de";
+ var u=new SpeechSynthesisUtterance(text);u.lang=lang==="en"?"en-GB":"de-CH";u.rate=ST.rate||0.95;
+ var v=voicesFor(lang),want=lang==="en"?ST.voiceEn:ST.voice;
+ var pick=v.find(function(x){return x.name===want;})||(lang==="de"?v.find(function(x){return x.lang==="de-CH";}):null)||v[0];
+ if(pick){u.voice=pick;u.lang=pick.lang;}s.speak(u);}catch(e){}}
+
+/* ---------- Start ---------- */
+function renderWho(){
+ P=null;S=null;var g=$("whoGrid");g.innerHTML="";
+ ST.profiles.forEach(function(p){var b=document.createElement("button");b.className="who";b.style.setProperty("--c",p.color);
+  b.innerHTML='<span class="avatar"></span><span></span>';b.firstChild.textContent=(p.name||"?").charAt(0).toUpperCase();b.lastChild.textContent=p.name;
+  b.addEventListener("click",function(){useProfile(p.id);renderStart();});g.appendChild(b);});
+ show("s-who");
+}
+$("switchBtn").addEventListener("click",renderWho);
+function renderStart(){
+ if(!S){renderWho();return;}
+ document.querySelectorAll(".energy button").forEach(function(b){var e=+b.dataset.e;b.lastElementChild.textContent=P.blocks[e-1]+"-Min.-Blöcke";});
+ var n=P.name?(", "+P.name):"";$("hello").textContent="Hallo"+n+"! Schön, dass du da bist.";
+ var ss=S.session,running=ss&&(Date.now()-ss.lessonStart)<LESSON_MIN*60000;
+ if(ss&&!running){S.session=null;save();}
+ $("resumeBox").style.display=running?"flex":"none";
+ $("helloSub").textContent=(S.lastAttend===today())?"Du hast deine 10 Punkte fürs Dasein heute schon bekommen.":"Du bekommst 10 Punkte, nur weil du heute hier bist.";
+ renderTop();show("s-start");
+}
+document.querySelectorAll(".energy button").forEach(function(b){b.addEventListener("click",function(){
+ var e=+b.dataset.e;S.session={energy:e,blockLen:P.blocks[e-1],brk:P.brk,lessonStart:Date.now(),blockEnd:0,taskId:null,steps:0,tasksDone:0,xp:0,earlyUsed:false,phase:"pick"};
+ if(S.lastAttend!==today()){S.lastAttend=today();save();addXp(10,"Schön, dass du da bist!");}
+ save();startSubject();
+});});
+$("resumeBtn").addEventListener("click",function(){backToStudent();});
+
+/* ---------- Wochenziel ---------- */
+function weekId(){var d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+3-(d.getDay()+6)%7);var w1=new Date(d.getFullYear(),0,4);
+ return d.getFullYear()+"-W"+(1+Math.round(((d-w1)/864e5-3+(w1.getDay()+6)%7)/7));}
+function wk(){if(!S.wk)S.wk={id:"",sec:{},hit:{}};if(!S.goals)S.goals={};if(!S.ordered)S.ordered={};
+ if(S.wk.id!==weekId()){S.wk={id:weekId(),sec:{},hit:{}};}return S.wk;}
+function weekMin(s){return Math.floor((wk().sec[s]||0)/60);}
+function goalTxt(s){var g=S.goals&&S.goals[s];if(!g)return "";return "Diese Woche: "+Math.min(weekMin(s),g)+" von "+g+" Min."+(weekMin(s)>=g?" ✓":"");}
+
+/* ---------- Fächer ---------- */
+var SUBJ_COL={"Geografie":"#2C7A6B","Englisch":"#2F6FB3","Deutsch":"#C2453A","Mathematik":"#7A4FB0","Natur und Technik":"#4F8F2F"};
+var EXTRA_COL=["#B5762A","#3A8C9C","#9C3A7A","#5C6B2F"];
+function subjects(){var out=[];S.tasks.forEach(function(t){if(out.indexOf(t.subject)<0)out.push(t.subject);});return out;}
+function subjColor(s){if(SUBJ_COL[s])return SUBJ_COL[s];var i=subjects().indexOf(s);return EXTRA_COL[(i<0?0:i)%EXTRA_COL.length];}
+function goSubject(){
+ S.session.phase="subject";save();
+ var g=$("subjGrid");g.innerHTML="";
+ subjects().forEach(function(s){
+  var all=S.tasks.filter(function(t){return t.subject===s;}),open=all.filter(function(t){return !t.done;}).length;
+  var b=document.createElement("button");b.className="subj";b.style.setProperty("--c",subjColor(s));
+  b.innerHTML='<span></span><small></small>';b.firstChild.textContent=s;
+  b.lastChild.textContent=open?(open+(open===1?" Mission offen":" Missionen offen")):"Alles erledigt!";
+  var gg=S.goals&&S.goals[s];if(gg){var gl=document.createElement("small");gl.textContent=goalTxt(s);b.appendChild(gl);
+   var br=document.createElement("div");br.className="bar";br.style.cssText="width:100%;margin-top:2px";br.innerHTML='<i style="background:'+subjColor(s)+';width:'+Math.min(100,weekMin(s)/gg*100)+'%"></i>';b.appendChild(br);}
+  b.disabled=!open;
+  b.addEventListener("click",function(){S.session.subject=s;offset=0;save();goPick();});
+  g.appendChild(b);
+ });
+ renderTop();show("s-subject");
+}
+function startSubject(){
+ var fix=S.fixSubject;
+ if(fix&&S.tasks.some(function(t){return t.subject===fix&&!t.done;})){S.session.subject=fix;save();goPick();}
+ else goSubject();
+}
+$("subjBtn").addEventListener("click",goSubject);
+
+/* ---------- Mission wählen ---------- */
+var offset=0;
+function openTasks(all){var sub=S.session&&S.session.subject;return S.tasks.filter(function(t){return !t.done&&(all||!sub||t.subject===sub);});}
+function goPick(){
+ S.session.phase="pick";save();
+ if(lessonLeftMin()<5){goEnd();return;}
+ var open=openTasks(),box=$("missions");box.innerHTML="";
+ if(!open.length){box.innerHTML='<div class="card" style="grid-column:1/-1"><h2>In diesem Fach ist alles erledigt!</h2><p>Wähle ein anderes Fach oder frag deine Lehrperson nach einem Bonusauftrag.</p></div>';$("otherBtn").style.display="none";$("pickSubj").textContent=S.session.subject||"";renderTop();show("s-pick");return;}
+ var sc=S.session.subject;$("pickSubj").textContent=sc||"";$("pickSubj").style.cssText=sc?"background:"+subjColor(sc)+";color:#fff":"";
+ var ord=sc&&S.ordered&&S.ordered[sc];
+ var fav=ord?null:open.find(function(t){return t.id===S.nextStart;});
+ var list=ord?[open[0]]:open.filter(function(t){return t!==fav;});
+ var pickTwo=[];if(fav)pickTwo.push(fav);
+ for(var i=0;pickTwo.length<2&&i<list.length;i++)pickTwo.push(list[(offset+i)%list.length]);
+ pickTwo.forEach(function(t){
+  var d=document.createElement("div");d.className="mission"+(t===fav?" fav":"");
+  var left=t.steps.length-(t.pos||0);
+  d.innerHTML=(t.img&&IMG[t.img]?'<img class="cover" alt="" src="'+IMG[t.img]+'">':'')+'<span class="chip" style="align-self:flex-start"></span>'+(t===fav?'<span class="muted" style="font-size:15px">Damit wolltest du starten</span>':'')+'<h2></h2><span class="muted" style="font-size:16px"></span><div class="row"><button class="speak"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>Vorlesen</button><button class="btn-go">Los geht\'s</button></div>';
+  d.querySelector(".chip").textContent=t.subject;d.querySelector(".chip").style.cssText="align-self:flex-start;background:"+subjColor(t.subject)+";color:#fff";d.querySelector("h2").textContent=t.title;
+  d.querySelector(".muted:last-of-type").textContent=left+(left===1?" Schritt":" Schritte")+(t.pos?" übrig":"");
+  d.querySelector(".speak").addEventListener("click",function(){speak(t.title+". "+t.steps.length+" Schritte.");});
+  d.querySelector(".btn-go").addEventListener("click",function(){S.session.taskId=t.id;if(S.nextStart===t.id)S.nextStart=null;save();goWork(true);});
+  box.appendChild(d);
+ });
+ $("otherBtn").style.display=(!ord&&list.length>(fav?1:2))?"":"none";
+ renderTop();show("s-pick");
+}
+$("otherBtn").addEventListener("click",function(){offset+=2;goPick();});
+
+/* ---------- Arbeiten ---------- */
+function lessonLeftMin(){return LESSON_MIN-(Date.now()-S.session.lessonStart)/60000;}
+function curTask(){var id=S.session.taskId;return S.tasks.find(function(t){return t.id===id;});}
+function goWork(newBlock){
+ var ss=S.session;ss.phase="work";
+ if(newBlock||!ss.blockEnd||ss.blockEnd<Date.now()){
+  var len=Math.min(ss.blockLen,lessonLeftMin()-5);
+  if(len<3){save();goEnd();return;}
+  ss.blockStart=Date.now();ss.blockEnd=Date.now()+len*60000;ss.earlyUsed=false;
+ }
+ save();renderWork();show("s-work");
+}
+function parseStep(s){
+ var m,lv=null;
+ if((m=s.match(/^\s*\[([BSGbsg]+)\]\s*(.*)$/))){lv=m[1].toUpperCase();s=m[2];}
+ var r=parseStep0(s);r.lv=lv;return r;
+}
+var LV={B:{name:"Bronze",col:"#A86A3D",bonus:0},S:{name:"Silber",col:"#8A949C",bonus:10},G:{name:"Gold",col:"#C9A227",bonus:20}};
+function parseStep0(s){
+ var m;
+ if((m=s.match(/^\s*level:\s*(.*)$/i))){var lp=m[1].split("|").map(function(x){return x.trim();}).filter(Boolean),lpr="Wähle dein Level.",lo=[];
+  lp.forEach(function(x){var mm=x.match(/^(bronze|silber|gold)\s*:\s*(.*)$/i);if(mm)lo.push({lv:mm[1][0].toUpperCase(),desc:mm[2]});else lpr=x;});
+  if(!lo.length)lo=[{lv:"B",desc:""},{lv:"S",desc:""},{lv:"G",desc:""}];
+  return {type:"level",text:lpr,opts:lo};}
+ if((m=s.match(/^\s*info:\s*(.*)$/i)))return {type:"info",text:m[1]};
+ if((m=s.match(/^\s*bild:\s*([\w-]+)\s*\|?\s*(.*)$/i)))return {type:"img",key:m[1].toLowerCase(),text:m[2]||IMG_CAP[m[1].toLowerCase()]||"Schau das Bild genau an."};
+ if((m=s.match(/^\s*quiz:\s*(.*)$/i))){var parts=m[1].split("|").map(function(x){return x.trim();}).filter(Boolean);
+  var q=parts.shift()||"",opts=parts.map(function(o){return {text:o.replace(/^\*/,"").trim(),ok:/^\*/.test(o)};});
+  if(opts.length&&!opts.some(function(o){return o.ok;}))opts[0].ok=true;
+  return {type:"quiz",text:q,opts:opts};}
+ var sp=function(x){return x.split("|").map(function(y){return y.trim();}).filter(Boolean);};
+ if((m=s.match(/^\s*(paare|memory):\s*(.*)$/i))){var ps=sp(m[2]),kind=m[1].toLowerCase();
+  var pr=(ps.length&&ps[0].indexOf("=")<0)?ps.shift():(kind==="paare"?"Finde die Paare. Tipp zuerst links, dann rechts das passende Kärtchen.":"Deck zwei Karten auf. Finde die Paare.");
+  var pairs=ps.map(function(x){var i=x.indexOf("=");return i<0?null:[x.slice(0,i).trim(),x.slice(i+1).trim()];}).filter(Boolean);
+  return {type:kind,text:pr,pairs:pairs};}
+ if((m=s.match(/^\s*k(?:ö|oe)rbe:\s*(.*)$/i))){var kp=sp(m[1]),kpr="Leg jedes Wort in den richtigen Korb.";
+  if(kp.length>=3||(kp.length&&kp[0].indexOf(":")<0))kpr=kp.shift();
+  var bs=kp.map(function(x){var mm=x.match(/^(.*?\S):\s+(.*)$/);if(!mm)return {name:"",items:[]};return {name:mm[1].trim(),items:mm[2].split(",").map(function(y){return y.trim();}).filter(Boolean)};}).filter(function(b){return b.name&&b.items.length;});
+  return {type:"koerbe",text:kpr,baskets:bs};}
+ if((m=s.match(/^\s*posten:\s*(.*)$/i))){var pp=sp(m[1]);return {type:"posten",text:pp.length>1?pp.slice(0,-1).join(" "):pp[0]||"",code:pp.length>1?pp[pp.length-1]:""};}
+ return {type:"do",text:s};
+}
+function finishInteractive(errs,msg){locked=true;$("wFb").textContent=msg;setTimeout(function(){advance(errs===0?8:5,errs===0?"Fehlerfrei!":"Geschafft!");},1000);}
+function normCode(x){return String(x).toUpperCase().replace(/ß/g,"SS").replace(/\s+/g,"");}
+var curItemText="";
+function renderPairs(st,opts){
+ opts.className="opts pairs";var L=document.createElement("div"),R=document.createElement("div");L.className="col";R.className="col";
+ var selL=null,found=0,errs=0;
+ shuffle(st.pairs.map(function(p,i){return i;})).forEach(function(i){var b=document.createElement("button");b.textContent=st.pairs[i][0];b.dataset.i=i;
+  b.addEventListener("click",function(){if(locked||b.disabled)return;L.querySelectorAll("button").forEach(function(x){x.classList.remove("sel");});b.classList.add("sel");selL=b;$("wFb").textContent="";});L.appendChild(b);});
+ shuffle(st.pairs.map(function(p,i){return i;})).forEach(function(i){var b=document.createElement("button");b.textContent=st.pairs[i][1];b.dataset.i=i;
+  b.addEventListener("click",function(){if(locked||b.disabled)return;
+   if(!selL){$("wFb").textContent="Tipp zuerst links ein Kärtchen an.";return;}
+   if(selL.dataset.i===b.dataset.i){[selL,b].forEach(function(x){x.classList.remove("sel");x.classList.add("ok");x.disabled=true;});selL=null;found++;$("wFb").textContent="Passt!";
+    if(found===st.pairs.length)finishInteractive(errs,"Super, alle Paare gefunden!");}
+   else{errs++;b.classList.add("no");$("wFb").textContent="Passt nicht. Probier ein anderes.";setTimeout(function(){b.classList.remove("no");},700);}
+  });R.appendChild(b);});
+ opts.appendChild(L);opts.appendChild(R);
+}
+function renderMemory(st,opts){
+ opts.className="opts mem";var cards=[];st.pairs.forEach(function(p,i){cards.push({i:i,t:p[0]});cards.push({i:i,t:p[1]});});
+ var open=[],matched=0,tries=0,busy=false;
+ shuffle(cards).forEach(function(c){var b=document.createElement("button");b.textContent=c.t;b.className="hid";b.setAttribute("aria-label","Verdeckte Karte");
+  b.addEventListener("click",function(){if(locked||busy||!b.classList.contains("hid"))return;
+   b.classList.remove("hid");b.removeAttribute("aria-label");open.push({b:b,c:c});
+   if(open.length===2){tries++;var a=open[0],z=open[1];
+    if(a.c.i===z.c.i){a.b.classList.add("ok");z.b.classList.add("ok");a.b.disabled=z.b.disabled=true;open=[];matched++;$("wFb").textContent="Paar gefunden! Versuche: "+tries;
+     if(matched===st.pairs.length)finishInteractive(tries>st.pairs.length*2?1:0,"Alle Paare gefunden! Versuche: "+tries);}
+    else{busy=true;$("wFb").textContent="Kein Paar. Versuche: "+tries;setTimeout(function(){a.b.classList.add("hid");z.b.classList.add("hid");a.b.setAttribute("aria-label","Verdeckte Karte");z.b.setAttribute("aria-label","Verdeckte Karte");open=[];busy=false;},1100);}
+   }});opts.appendChild(b);});
+}
+function renderBaskets(st,opts){
+ opts.className="opts";var items=[];st.baskets.forEach(function(b,i){b.items.forEach(function(t){items.push({t:t,i:i});});});items=shuffle(items);
+ var k=0,errs=0,big=document.createElement("div");big.className="item-big";var cnt=document.createElement("p");cnt.className="muted";cnt.style.margin="0";
+ var row=document.createElement("div");row.className="baskets";var gots=[];
+ st.baskets.forEach(function(bk,i){var b=document.createElement("button");b.className="basket";b.innerHTML='<span></span><span class="got"></span>';b.firstChild.textContent=bk.name;gots.push(b.lastChild);
+  b.addEventListener("click",function(){if(locked||k>=items.length)return;
+   if(items[k].i===i){var s=document.createElement("span");s.textContent=items[k].t;gots[i].appendChild(s);k++;$("wFb").textContent="Richtig!";show_();}
+   else{errs++;$("wFb").textContent="Gehört in den anderen Korb. Probier nochmals.";}});row.appendChild(b);});
+ function show_(){if(k>=items.length){big.textContent="Alles sortiert!";cnt.textContent="";curItemText="";finishInteractive(errs,"Super, alles im richtigen Korb!");return;}
+  big.textContent=items[k].t;curItemText=items[k].t;cnt.textContent="Wort "+(k+1)+" von "+items.length;}
+ opts.appendChild(cnt);opts.appendChild(big);opts.appendChild(row);show_();$("wFb").textContent="";
+}
+function renderPosten(st,opts){
+ opts.className="opts";var r=document.createElement("div");r.className="code-row";
+ var inp=document.createElement("input");inp.type="text";inp.id="codeIn";inp.autocomplete="off";inp.setAttribute("aria-label","Codewort");inp.placeholder="Codewort";
+ var b=document.createElement("button");b.className="btn-accent";b.textContent="Prüfen";
+ function check(){if(locked)return;if(!st.code||normCode(inp.value)===normCode(st.code)){finishInteractive(0,"Codewort richtig!");}
+  else{$("wFb").textContent="Das Codewort stimmt nicht. Schau nochmals beim Posten.";}}
+ b.addEventListener("click",check);inp.addEventListener("keydown",function(e){if(e.key==="Enter")check();});
+ r.appendChild(inp);r.appendChild(b);opts.appendChild(r);
+}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var x=a[i];a[i]=a[j];a[j]=x;}return a;}
+var quizTries=0,locked=false;
+function stepVisible(t,i){var st=parseStep(t.steps[i]);return !st.lv||!t.level||st.lv.indexOf(t.level)>=0;}
+function visList(t){var a=[];t.steps.forEach(function(_,i){if(stepVisible(t,i))a.push(i);});return a;}
+function renderWork(){
+ var t=curTask();if(!t){goPick();return;}
+ while((t.pos||0)<t.steps.length&&!stepVisible(t,t.pos||0))t.pos=(t.pos||0)+1;
+ if((t.pos||0)>=t.steps.length){t.pos=t.steps.length-1;advance(0);return;}
+ var p=t.pos||0,st=parseStep(t.steps[p]);
+ $("wSubject").textContent=t.subject;$("wSubject").style.cssText="background:"+subjColor(t.subject)+";color:#fff";$("wTitle").textContent=t.title;
+ var vl=visList(t),vi=vl.indexOf(p);
+ $("wStepLbl").textContent="Schritt "+(vi+1)+" von "+vl.length;
+ var dots=$("wDots");dots.innerHTML="";vl.forEach(function(i){var x=document.createElement("i");if(i<p)x.className="d";else if(i===p)x.className="c";dots.appendChild(x);});
+ var lc=$("wLevel");if(t.level&&LV[t.level]){lc.style.display="";lc.textContent=LV[t.level].name;lc.style.background=LV[t.level].col;}else lc.style.display="none";
+ var rb=$("refBtn");if(t.ref&&REFS[t.ref]){rb.style.display="";rb.textContent=REFS[t.ref].btn;}else rb.style.display="none";
+ var stepEl=$("wStep"),opts=$("wOpts");opts.innerHTML="";opts.className="opts";curItemText="";$("wFb").textContent="";quizTries=0;locked=false;
+ stepEl.textContent=st.text;stepEl.className=st.type==="info"?"info-text":"step-text";
+ $("wKind").textContent={info:"Lesen oder zuhören",quiz:"Quiz",do:"Auftrag",img:"Bild anschauen",paare:"Zuordnen",memory:"Memory",koerbe:"Zwei Körbe",posten:"Posten im Raum",level:"Level wählen"}[st.type];
+ var im=$("wImg");if(st.type==="img"&&IMG[st.key]){im.src=IMG[st.key];im.alt=IMG_CAP[st.key]||"";im.style.display="block";im.style.objectFit=st.key==="karte"?"contain":"cover";im.style.background="var(--soft)";}else{im.style.display="none";im.removeAttribute("src");}
+ if(st.type==="img")stepEl.className="info-text";
+ var done=$("doneStepBtn");
+ if(st.type==="quiz"){done.style.display="none";
+  shuffle(st.opts).forEach(function(o){var b=document.createElement("button");b.textContent=o.text;
+   b.addEventListener("click",function(){if(locked)return;quizTries++;
+    if(o.ok){locked=true;b.classList.add("ok");$("wFb").textContent=quizTries===1?"Richtig!":"Richtig, gut drangeblieben!";
+     setTimeout(function(){advance(quizTries===1?5:3,"Richtig!");},900);}
+    else{b.classList.add("no");b.disabled=true;$("wFb").textContent="Noch nicht. Versuch es nochmals.";}
+   });opts.appendChild(b);});
+ }else if(st.type==="paare"){done.style.display="none";renderPairs(st,opts);
+ }else if(st.type==="memory"){done.style.display="none";renderMemory(st,opts);
+ }else if(st.type==="koerbe"){done.style.display="none";renderBaskets(st,opts);
+ }else if(st.type==="posten"){done.style.display="none";renderPosten(st,opts);
+ }else if(st.type==="level"){done.style.display="none";opts.className="opts lv-grid";
+  st.opts.forEach(function(o){var L=LV[o.lv];if(!L)return;var b=document.createElement("button");b.className="lv";
+   b.innerHTML='<span class="medal"></span><b></b><span class="d"></span>';b.querySelector(".medal").style.background=L.col;b.querySelector(".medal").textContent=L.name[0];
+   b.querySelector("b").textContent=L.name;b.querySelector(".d").textContent=o.desc+(L.bonus?" · +"+L.bonus+" Bonuspunkte":"");
+   b.addEventListener("click",function(){if(locked)return;locked=true;t.level=o.lv;save();$("wFb").textContent="Du hast "+L.name+" gewählt. Los geht's!";setTimeout(function(){advance(5,L.name+"!");},700);});
+   opts.appendChild(b);});
+ }else{done.style.display="";done.textContent=st.type==="info"?"Verstanden ✓":(st.type==="img"?"Gesehen ✓":"Geschafft ✓");}
+ $("earlyBreakBtn").disabled=S.session.earlyUsed;$("goalTxt").textContent=goalTxt(t.subject);
+ renderTop();
+}
+$("speakBtn").addEventListener("click",function(){var t=curTask();if(!t)return;var st=parseStep(t.steps[t.pos||0]);
+ if(st.type==="quiz"){var bs=[].map.call($("wOpts").querySelectorAll("button"),function(b){return b.textContent;});speak(st.text+" "+bs.map(function(x,i){return "Antwort "+(i+1)+": "+x+".";}).join(" "));}
+ else if(st.type==="level"){speak(st.text+" "+st.opts.map(function(o){return LV[o.lv].name+": "+o.desc+".";}).join(" "));}
+ else speak(st.text+(curItemText?". Das Wort: "+curItemText:""));});
+$("refBtn").addEventListener("click",function(){var t=curTask();if(!t||!REFS[t.ref])return;var R=REFS[t.ref];$("refTitle").textContent=R.title;$("refBody").innerHTML=R.html;$("refOv").classList.add("on");});
+$("refClose").addEventListener("click",function(){try{speechSynthesis.cancel();}catch(e){}$("refOv").classList.remove("on");});
+$("refSpeak").addEventListener("click",function(){var t=curTask();if(t&&REFS[t.ref])speak(REFS[t.ref].say);});
+function advance(xp,msg){
+ var t=curTask();if(!t)return;var ss=S.session;
+ t.pos=(t.pos||0)+1;if(xp)ss.steps++;
+ while(t.pos<t.steps.length&&!stepVisible(t,t.pos))t.pos++;
+ if(t.pos>=t.steps.length){var bonus=(t.level&&LV[t.level])?LV[t.level].bonus:0;t.done=true;t.pos=0;t.level=null;ss.tasksDone++;ss.taskId=null;save();addXp(20+bonus,"Mission geschafft!");
+  if(Date.now()>=ss.blockEnd){goBreak();}else{goPick();}
+  return;}
+ save();if(xp)addXp(xp,msg);renderWork();
+}
+$("doneStepBtn").addEventListener("click",function(){advance(5);});
+$("earlyBreakBtn").addEventListener("click",function(){S.session.earlyUsed=true;save();goBreak(true);});
+$("endEarlyBtn").addEventListener("click",function(){goEnd();});
+
+/* Hilfe */
+$("helpBtn").addEventListener("click",function(){var t=curTask();$("helpTip").textContent=(t&&t.tip)?t.tip:"Lies den Schritt nochmals langsam. Dann ruf deine Lehrperson.";$("handCard").style.display="none";$("helpOv").classList.add("on");});
+$("speakTip").addEventListener("click",function(){speak($("helpTip").textContent);});
+$("showHand").addEventListener("click",function(){$("handCard").style.display="block";});
+$("closeHelp").addEventListener("click",function(){$("helpOv").classList.remove("on");});
+
+/* ---------- Pause ---------- */
+var breakEnd=0;
+function newMove(){var m=MOVES[Math.floor(Math.random()*MOVES.length)];$("moveText").textContent=m;}
+function goBreak(early){
+ var ss=S.session;
+ if(ss.phase!=="break"){if(!early)addXp(10,"Block durchgehalten!");ss.phase="break";ss.breakEnd=Date.now()+breakSec()*1000;ss.blockEnd=0;save();}
+ breakEnd=ss.breakEnd;newMove();renderTop();show("s-break");
+}
+$("otherMoveBtn").addEventListener("click",newMove);
+$("backBtn").addEventListener("click",function(){
+ var ss=S.session;ss.phase="pick";save();
+ if(lessonLeftMin()<8){goEnd();return;}
+ if(ss.taskId&&curTask()&&!curTask().done){goWork(true);}else{goPick();}
+});
+
+/* ---------- Abschluss ---------- */
+var rating=0,nextPick=null;
+function goEnd(){
+ var ss=S.session;if(!ss){renderStart();return;}ss.phase="end";save();
+ $("eSteps").textContent=ss.steps;$("eTasks").textContent=ss.tasksDone;$("eXp").textContent=ss.xp;
+ rating=0;nextPick=null;document.querySelectorAll("#faces button").forEach(function(b){b.classList.remove("sel");});
+ var list=$("nextList");list.innerHTML="";var open=openTasks(true);
+ $("nextBox").style.display=open.length?"":"none";
+ open.filter(function(t){return !(S.ordered&&S.ordered[t.subject])||openTasks(true).find(function(x){return x.subject===t.subject;})===t;}).slice(0,4).forEach(function(t){var b=document.createElement("button");b.textContent=t.subject+": "+t.title;
+  b.addEventListener("click",function(){nextPick=t.id;list.querySelectorAll("button").forEach(function(x){x.classList.toggle("sel",x===b);});});list.appendChild(b);});
+ renderTop();show("s-end");
+}
+document.querySelectorAll("#faces button").forEach(function(b){b.addEventListener("click",function(){rating=+b.dataset.r;document.querySelectorAll("#faces button").forEach(function(x){x.classList.toggle("sel",x===b);});});});
+$("finishBtn").addEventListener("click",function(){
+ var ss=S.session;
+ S.log.unshift({date:today(),subject:ss.subject||"",energy:ss.energy,steps:ss.steps,tasks:ss.tasksDone,rating:rating});S.log=S.log.slice(0,60);
+ if(nextPick)S.nextStart=nextPick;
+ var gained=ss.xp;S.session=null;save();
+ $("byeTitle").textContent="Super gemacht"+(P&&P.name?", "+P.name:"")+"!";
+ $("byeText").textContent="Du hast heute "+gained+" Punkte gesammelt."+(nextPick?" Nächstes Mal geht es direkt mit deiner Wunschmission los.":" Bis zum nächsten Mal.");
+ renderTop();show("s-bye");
+});
+$("newLessonBtn").addEventListener("click",renderWho);
+
+/* ---------- Uhr ---------- */
+function fmt(sec){sec=Math.max(0,Math.ceil(sec));return Math.floor(sec/60)+":"+String(sec%60).padStart(2,"0");}
+setInterval(function(){
+ if(!S||!S.session)return;renderTop();
+ if(cur==="s-work"&&S.session.subject){var w=wk(),sj=S.session.subject;w.sec[sj]=(w.sec[sj]||0)+1;
+  var g=S.goals[sj];$("goalTxt").textContent=goalTxt(sj);
+  if(g&&!w.hit[sj]&&w.sec[sj]>=g*60){w.hit[sj]=true;save();addXp(20,"Wochenziel "+sj+" geschafft!");}
+  if(w.sec[sj]%10===0)save();}
+ if(cur==="s-work"){var ss=S.session,tot=ss.blockEnd-ss.blockStart,left=ss.blockEnd-Date.now();
+  if(left<=0){goBreak();return;}
+  var m=Math.ceil(left/60000);$("blockTxt").textContent=m<=1?"Noch "+fmt(left/1000)+" bis zur Bewegungspause":"Noch "+m+" Min. bis zur Bewegungspause";
+  $("blockBar").style.width=(left/tot*100)+"%";}
+ if(cur==="s-break"){var l=(breakEnd-Date.now())/1000;$("breakCount").textContent=fmt(l);$("backBtn").disabled=l>breakSec()-BREAK_MIN_SEC;}
+},1000);
+
+/* ---------- Lehrperson ---------- */
+function profOfS(){return ST.profiles.find(function(p){return p.state===S;});}
+var delArm=null;
+function renderProfiles(){
+ var tb=$("tProf");tb.innerHTML="";var ed=profOfS();
+ ST.profiles.forEach(function(p,i){var tr=document.createElement("tr");
+  var done=p.state.tasks.filter(function(t){return t.done;}).length;
+  tr=document.createElement("div");tr.className="prof";tr.style.setProperty("--c",p.color);
+  tr.innerHTML='<span class="avatar sm"></span><label>Name<input data-k="name"></label><label>Blocktyp<select data-k="type"></select></label><label>Blöcke wenig / mittel / viel (Min.)<span class="row" style="gap:4px;flex-wrap:nowrap"><input data-k="b0" type="number" min="3" max="45"><input data-k="b1" type="number" min="3" max="45"><input data-k="b2" type="number" min="3" max="45"></span></label><label>Pause (Min.)<input data-k="brk" type="number" min="1" max="10"></label><span class="pstat"></span><span class="row" style="gap:6px"><button data-edit></button><button class="btn-ghost" data-del>Löschen</button></span>';
+  tr.dataset.id=p.id;
+  var sel=tr.querySelector('[data-k="type"]');Object.keys(TYPES).forEach(function(k){var o=document.createElement("option");o.value=k;o.textContent=TYPES[k].label;sel.appendChild(o);});
+  var o2=document.createElement("option");o2.value="eigen";o2.textContent="Eigene Einstellung";sel.appendChild(o2);
+  tr.querySelector('[data-k="name"]').value=p.name;sel.value=p.type||"eigen";
+  ["b0","b1","b2"].forEach(function(k,j){tr.querySelector('[data-k="'+k+'"]').value=p.blocks[j];});tr.querySelector('[data-k="brk"]').value=p.brk;
+  tr.querySelectorAll("input,select").forEach(function(x){x.id="prof-"+i+"-"+x.dataset.k;x.setAttribute("aria-label",x.dataset.k);});
+  sel.addEventListener("change",function(){var T=TYPES[sel.value];if(!T)return;["b0","b1","b2"].forEach(function(k,j){tr.querySelector('[data-k="'+k+'"]').value=T.blocks[j];});tr.querySelector('[data-k="brk"]').value=T.brk;});
+  ["b0","b1","b2","brk"].forEach(function(k){tr.querySelector('[data-k="'+k+'"]').addEventListener("input",function(){sel.value="eigen";});});
+  tr.querySelector(".avatar").textContent=(p.name||"?").charAt(0).toUpperCase();tr.querySelector(".pstat").textContent=p.state.xp+" Punkte · "+done+" von "+p.state.tasks.length+" Missionen";
+  var eb=tr.querySelector("[data-edit]");if(p===ed){eb.textContent="Wird bearbeitet";eb.disabled=true;}else{eb.textContent="Wochenplan bearbeiten";}
+  eb.addEventListener("click",function(){collect();S=p.state;renderTeacher();});
+  var db=tr.querySelector("[data-del]");
+  db.addEventListener("click",function(){if(ST.profiles.length<2){$("tMsg").textContent="";db.textContent="Mindestens 1 Profil";return;}
+   if(delArm!==p.id){delArm=p.id;db.textContent="Wirklich löschen?";return;}
+   collect();ST.profiles=ST.profiles.filter(function(x){return x!==p;});if(P===p)P=null;if(S===p.state)S=ST.profiles[0].state;delArm=null;save();renderTeacher();});
+  tb.appendChild(tr);});
+}
+function collectProfiles(){
+ document.querySelectorAll("#tProf .prof").forEach(function(tr){var p=profById(tr.dataset.id);if(!p)return;
+  var g=function(k){return tr.querySelector('[data-k="'+k+'"]').value;};
+  p.name=g("name").trim()||p.name;p.type=g("type");
+  p.blocks=["b0","b1","b2"].map(function(k,j){var v=parseInt(g(k),10);return v>=3&&v<=45?v:p.blocks[j];});
+  var bk=parseInt(g("brk"),10);p.brk=bk>=1&&bk<=10?bk:p.brk;});
+}
+$("tAddProf").addEventListener("click",function(){collect();var np=newProfile("Neues Profil","kurz",COLORS[ST.profiles.length%COLORS.length]);ST.profiles.push(np);S=np.state;save();renderTeacher();});
+function fillVoices(sel,prefix,cur){sel.innerHTML="";var o0=document.createElement("option");o0.value="";o0.textContent="Automatisch";sel.appendChild(o0);
+ voicesFor(prefix).forEach(function(v){var o=document.createElement("option");o.value=v.name;o.textContent=v.name+" ("+v.lang+")";sel.appendChild(o);});sel.value=cur||"";if(sel.value!==(cur||""))sel.value="";}
+function renderVoices(){fillVoices($("tVoice"),"de",ST.voice);fillVoices($("tVoiceEn"),"en",ST.voiceEn);$("tRate").value=ST.rate||0.95;$("tRateTxt").textContent=Math.round((ST.rate||0.95)*100)+" %";}
+try{speechSynthesis.onvoiceschanged=function(){if(cur==="s-teacher")renderVoices();};}catch(e){}
+function readVoiceInputs(){ST.voice=$("tVoice").value;ST.voiceEn=$("tVoiceEn").value;ST.rate=parseFloat($("tRate").value)||0.95;}
+$("tRate").addEventListener("input",function(){$("tRateTxt").textContent=Math.round(parseFloat(this.value)*100)+" %";});
+$("tTry").addEventListener("click",function(){readVoiceInputs();speak("Hallo! So klingt die Vorlesestimme. Punkt vor Strich: Mal und geteilt rechnest du zuerst.");});
+$("tTryEn").addEventListener("click",function(){readVoiceInputs();speak("Hello! This is the English voice.","en");});
+function backupDue(){return ST.profiles.some(function(p){return p.state.log&&p.state.log.length>0;})&&(!ST.lastExport||Date.now()-ST.lastExport>7*864e5);}
+function renderBackup(){var el=$("tBackup");
+ if(!ST.lastExport){el.textContent="Noch nie gesichert. Klick auf «Code kopieren» und leg den Code ab.";}
+ else{var d=Math.floor((Date.now()-ST.lastExport)/864e5),dt=new Date(ST.lastExport);
+  el.textContent="Letzte Sicherung: "+dt.getDate()+"."+(dt.getMonth()+1)+"."+dt.getFullYear()+(d>=7?" – vor "+d+" Tagen. Zeit für eine neue Sicherung.":(d===0?" (heute).":" (vor "+d+(d===1?" Tag).":" Tagen).")));}
+ el.style.background=backupDue()?"#FCE9D6":"var(--soft)";}
+function renderFooter(){$("teacherBtn").textContent=backupDue()?"Lehrperson · Sicherung fällig":"Lehrperson";}
+$("teacherBtn").addEventListener("click",function(){$("pinIn").value="";$("pinErr").textContent="";show("s-pin");$("pinIn").focus();});
+$("pinCancel").addEventListener("click",function(){if(P)backToStudent();else renderWho();});
+function tryPin(){if($("pinIn").value===String(ST.pin)){if(!S)S=(P?P.state:ST.profiles[0].state);renderTeacher();show("s-teacher");}else{$("pinErr").textContent="Falscher PIN. Versuch es nochmals.";}}
+$("pinOk").addEventListener("click",tryPin);
+$("pinIn").addEventListener("keydown",function(e){if(e.key==="Enter")tryPin();});
+function backToStudent(){if(P&&ST.profiles.indexOf(P)>=0)S=P.state;else{renderWho();return;}var ss=S.session;if(!ss){renderStart();return;}
+ if(ss.phase==="work")goWork(false);else if(ss.phase==="break")goBreak();else if(ss.phase==="end")goEnd();else if(ss.phase==="subject"||!ss.subject)goSubject();else goPick();}
+function renderTeacher(){
+ renderProfiles();$("tEditTitle").textContent="Wochenplan von "+(profOfS()?profOfS().name:"");$("tPin").value=ST.pin;
+ var fx=$("tFix");fx.innerHTML="";var o0=document.createElement("option");o0.value="";o0.textContent="Schüler wählt selbst";fx.appendChild(o0);
+ subjects().forEach(function(s){var o=document.createElement("option");o.value=s;o.textContent=s;fx.appendChild(o);});fx.value=S.fixSubject||"";
+ renderBackup();renderVoices();
+ var ts=$("tSubj");ts.innerHTML="";
+ subjects().forEach(function(s,i){var tr=document.createElement("tr");
+  tr.innerHTML='<td></td><td><input type="number" min="0" step="5" style="width:90px" data-goal></td><td><input type="checkbox" data-ord style="width:22px;height:22px"></td><td></td>';
+  tr.children[0].textContent=s;var gi=tr.querySelector("[data-goal]"),oi=tr.querySelector("[data-ord]");gi.id="goal-"+i;oi.id="ord-"+i;
+  gi.value=(S.goals&&S.goals[s])||0;oi.checked=!!(S.ordered&&S.ordered[s]);gi.dataset.s=s;oi.dataset.s=s;
+  tr.children[3].textContent=weekMin(s)+" Min.";ts.appendChild(tr);});
+ var box=$("tTasks");box.innerHTML="";
+ S.tasks.forEach(function(t,i){
+  var d=document.createElement("div");d.className="t-task"+(t.done?" done":"");
+  d.innerHTML='<div class="grid2"><label>Fach<input data-f="subject"></label><label>Titel<input data-f="title"></label><label>Status<select data-f="done"><option value="0">offen</option><option value="1">erledigt</option></select></label></div>'+
+   '<label>Schritte (einer pro Zeile)<textarea data-f="steps"></textarea></label><label>Tipp bei «Hilfe»<input data-f="tip"></label><div><button class="btn-ghost" data-del>Auftrag löschen</button></div>';
+  d.querySelector('[data-f="subject"]').value=t.subject;d.querySelector('[data-f="title"]').value=t.title;
+  d.querySelector('[data-f="done"]').value=t.done?"1":"0";d.querySelector('[data-f="steps"]').value=t.steps.join("\n");d.querySelector('[data-f="tip"]').value=t.tip||"";
+  d.querySelectorAll("[data-f]").forEach(function(inp,k){inp.id="t"+i+"-"+inp.dataset.f;});
+  d.querySelector("[data-del]").addEventListener("click",function(){collect();S.tasks.splice(i,1);save();renderTeacher();});
+  d.dataset.idx=i;box.appendChild(d);
+ });
+ var lg=$("tLog");lg.innerHTML="";var en=["","wenig","mittel","viel"],ra=["–","schwierig","okay","gut"];
+ if(!S.log.length)lg.innerHTML='<tr><td colspan="6" class="muted">Noch keine Lektion abgeschlossen.</td></tr>';
+ S.log.forEach(function(r){var tr=document.createElement("tr");[r.date.split("-").reverse().join("."),r.subject||"–",en[r.energy],r.steps,r.tasks,ra[r.rating]].forEach(function(v){var td=document.createElement("td");td.textContent=v;tr.appendChild(td);});lg.appendChild(tr);});
+}
+function collect(){
+ collectProfiles();ST.pin=$("tPin").value.trim()||"1234";S.fixSubject=$("tFix").value;readVoiceInputs();
+ S.goals={};S.ordered={};document.querySelectorAll("#tSubj [data-goal]").forEach(function(x){var v=parseInt(x.value,10);if(v>0)S.goals[x.dataset.s]=v;});
+ document.querySelectorAll("#tSubj [data-ord]").forEach(function(x){if(x.checked)S.ordered[x.dataset.s]=true;});
+ document.querySelectorAll("#tTasks .t-task").forEach(function(d){var t=S.tasks[+d.dataset.idx];if(!t)return;
+  t.subject=d.querySelector('[data-f="subject"]').value.trim()||"Auftrag";t.title=d.querySelector('[data-f="title"]').value.trim()||"Ohne Titel";
+  var st=d.querySelector('[data-f="steps"]').value.split("\n").map(function(s){return s.trim();}).filter(Boolean);t.steps=st.length?st:["Arbeite am Auftrag."];
+  if((t.pos||0)>=t.steps.length)t.pos=0;
+  t.tip=d.querySelector('[data-f="tip"]').value.trim();var wasDone=t.done;t.done=d.querySelector('[data-f="done"]').value==="1";if(wasDone!==t.done)t.pos=0;});
+ save();
+}
+$("tAdd").addEventListener("click",function(){collect();S.tasks.push({id:uid(),subject:"",title:"",steps:[],tip:"",done:false,pos:0});save();renderTeacher();
+ var all=document.querySelectorAll("#tTasks .t-task");all[all.length-1].scrollIntoView({behavior:"smooth"});});
+$("tReset").addEventListener("click",function(){collect();S.tasks.forEach(function(t){t.done=false;t.pos=0;t.level=null;});S.nextStart=null;save();renderTeacher();$("tMsg").textContent="";});
+$("tClose").addEventListener("click",function(){collect();backToStudent();});
+$("tExport").addEventListener("click",function(){collect();ST.lastExport=Date.now();save();renderBackup();renderFooter();var c=JSON.stringify(ST);$("tCode").value=c;
+ try{navigator.clipboard.writeText(c).then(function(){$("tMsg").textContent="Code kopiert.";},function(){$("tMsg").textContent="Code steht im Feld. Bitte von Hand kopieren.";});}catch(e){$("tMsg").textContent="Code steht im Feld. Bitte von Hand kopieren.";}});
+$("tImport").addEventListener("click",function(){try{var d=JSON.parse($("tCode").value);if(!d.profiles||!d.profiles.length)throw 0;ST=d;ST.profiles.forEach(function(p){p.state.session=null;});P=null;S=ST.profiles[0].state;save();renderTeacher();$("tMsg").textContent="Code eingelesen.";}catch(e){$("tMsg").textContent="Dieser Code passt nicht. Kopiere ihn nochmals vollständig.";}});
+
+renderFooter();renderWho();
+})();
+</script>
+</body>
+</html>
